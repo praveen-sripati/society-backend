@@ -28,9 +28,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Create uploads directory within public for user-uploaded files
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use('/uploads', express.static('uploads'));
 
 // Routes
 app.use('/api/users', userRoutes);
