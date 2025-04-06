@@ -7,15 +7,21 @@ class NoticeController extends BaseController {
   // Create a new notice (protected, committee/admin only)
 
   async createNotice(req, res) {
-    const { title, content, category, attachments } = req.body;
+    const { title, content, category } = req.body;
     const posted_by = req.user.userId;
     const userRole = req.user.role;
     let imageUrl = null;
+    let pdfUrl = null;
 
-    if (req.file) {
+    if (req.files) {
       const protocol = req.protocol; // 'http' or 'https'
       const host = req.get('host'); // e.g., 'localhost:3000' or your domain name
-      imageUrl = `${protocol}://${host}/uploads/notices/${req.file.filename}`; // Full URL
+      if ((req.files)['image']) {
+        imageUrl = `${protocol}://${host}/uploads/notices/images/${(req.files)['image'][0].filename}`; // Full URL
+      }
+      if ((req.files)['pdfAttachment']) {
+        pdfUrl = `${protocol}://${host}/uploads/notices/pdfs/${(req.files)['pdfAttachment'][0].filename}`; // Full URL
+      }
     }
 
     const allowedRoles = ['committee', 'admin'];
@@ -31,10 +37,14 @@ class NoticeController extends BaseController {
       return this.sendError(res, new Error('Invalid notice category.'), 400);
     }
 
-    const attachmentsJSON = attachments ? JSON.stringify(attachments) : null;
+    let pdfAttachments = null;
+    if ((req.files)['pdfAttachment']?.length) {
+      pdfAttachments = { url: pdfUrl, filename: (req.files)['pdfAttachment'][0].filename };
+    }
+
     const newNotice = await pool.query(
       'INSERT INTO notices (title, content, category, posted_by, attachments, image_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [title, content, category, posted_by, attachmentsJSON || null, imageUrl || null]
+      [title, content, category, posted_by, JSON.stringify(pdfAttachments) || null, imageUrl || null]
     );
 
     return this.sendResponse(res, { notice: newNotice.rows[0] }, 'Notice created successfully', 201);
@@ -124,7 +134,7 @@ class NoticeController extends BaseController {
     const { id } = req.params;
     const userId = req.user.userId;
     const userRole = req.user.role;
-    const existingNotice = await pool.query('SELECT image_url, posted_by FROM notices WHERE id = $1', [id]);
+    const existingNotice = await pool.query('SELECT attachments, image_url, posted_by FROM notices WHERE id = $1', [id]);
     if (existingNotice.rows.length === 0) {
       return this.sendError(res, new Error('Notice not found.'), 404);
     }
@@ -138,8 +148,11 @@ class NoticeController extends BaseController {
     }
 
     let imageUrl = null;
+    let pdfUrl = null;
 
     imageUrl = existingNotice.rows[0].image_url;
+    console.log("existingNotice=> ", existingNotice.rows[0]);
+    pdfUrl = existingNotice.rows[0].attachments ? existingNotice.rows[0].attachments.url : null;
 
     await pool.query('DELETE FROM notices WHERE id = $1', [id]);
 
@@ -162,6 +175,30 @@ class NoticeController extends BaseController {
           console.warn(`Image not found: ${imagePath}`);
         } else {
           console.error(`Error deleting image: ${imagePath}`, err);
+          // Handle error gracefully (e.g., log it, but don't crash)
+        }
+      }
+    }
+
+    if (pdfUrl) {
+      let pdfPath; // Declare imagePath outside the if block
+
+      // Construct the full file path
+      pdfPath = new URL(pdfUrl).pathname; // Extract the pathname
+      pdfPath = path.join(__dirname, '../', pdfPath); // Still join with __dirname to be safe
+
+      console.log(pdfPath); // Keep this for debugging!
+
+      try {
+        // Use fs.promises.unlink for cleaner async handling
+        await fs.promises.unlink(pdfPath);
+        console.log(`Image deleted: ${pdfPath}`);
+      } catch (err) {
+        if (err.code === 'ENOENT') {
+          // File not found (this might happen if it was already deleted)
+          console.warn(`Image not found: ${pdfPath}`);
+        } else {
+          console.error(`Error deleting image: ${pdfPath}`, err);
           // Handle error gracefully (e.g., log it, but don't crash)
         }
       }
