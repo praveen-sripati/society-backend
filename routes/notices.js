@@ -53,7 +53,10 @@ router.get('/', authenticateToken, noticeController.asyncHandler(noticeControlle
 router.get('/:id', authenticateToken, noticeController.asyncHandler(noticeController.getNoticeById.bind(noticeController)));
 
 // Update a notice (protected, committee/admin only)
-router.put('/:id', authenticateToken, noticeController.asyncHandler(noticeController.updateNotice.bind(noticeController)));
+router.put('/:id', authenticateToken, upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'pdfAttachment', maxCount: 1 },
+]), noticeController.asyncHandler(noticeController.updateNotice.bind(noticeController)));
 
 // Delete a notice (protected, committee/admin only)
 router.delete('/:id', authenticateToken, noticeController.asyncHandler(noticeController.deleteNotice.bind(noticeController)));
