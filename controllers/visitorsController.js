@@ -79,7 +79,7 @@ class VisitorsController {
       }
 
       // 2. Authorization check (using the fetched pre-approval data)
-      if (userRole !== 'admin' || userId !== existingPreApproval.resident_id) {
+      if (userRole !== 'admin' && userId !== existingPreApproval.resident_id) {
         return res.status(403).json({ error: 'You are not authorized to update this pre-approval.' });
       }
 
@@ -114,7 +114,7 @@ class VisitorsController {
       }
 
       // 2. Authorization check (using the fetched pre-approval data)
-      if (userRole !== 'admin' || userId !== existingPreApproval.resident_id) {
+      if (userRole !== 'admin' && userId !== existingPreApproval.resident_id) {
         return res.status(403).json({ error: 'You are not authorized to delete this pre-approval.' });
       }
 
