@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const userRoutes = require('./routes/users');
 const noticeRoutes = require('./routes/notices');
+const visitorRoutes = require('./routes/visitors');
 const chatRoutes = require('./routes/chat');
 const maintenanceRequestsRoutes = require('./routes/maintenanceRequests');
 
@@ -33,6 +34,7 @@ app.use('/uploads', express.static('uploads'));
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/notices', noticeRoutes);
+app.use('/api/visitor-pre-approvals', visitorRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/maintenance-requests', maintenanceRequestsRoutes); 
 
