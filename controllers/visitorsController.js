@@ -47,6 +47,30 @@ class VisitorsController {
     }
   }
 
+  async getPaginatedPreApprovalsStatusPending(req, res) {
+    const { page, limit } = req.query;
+
+    try {
+      const result = await visitorsService.getPaginatedPreApprovalsStatusPending(page, limit);
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error('Error in getPaginatedPreApprovalsStatusPending controller:', error);
+      return res.status(500).json({ error: 'An error occurred while fetching pre-approvals.' });
+    }
+  }
+
+  async getPaginatedPreApprovalsStatusExpired(req, res) {
+    const { page, limit } = req.query;
+
+    try {
+      const result = await visitorsService.getPaginatedPreApprovalsStatusExpired(page, limit);
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error('Error in getPaginatedPreApprovals controller:', error);
+      return res.status(500).json({ error: 'An error occurred while fetching pre-approvals.' });
+    }
+  }
+
   async getPreApprovalById(req, res) {
     const { id } = req.params;
 
@@ -125,6 +149,87 @@ class VisitorsController {
     } catch (error) {
       console.error('Error in deletePreApproval controller:', error);
       res.status(500).json({ error: 'An error occurred while deleting the pre-approval.' });
+    }
+  }
+
+  async createArrival(req, res) {
+    try {
+      const arrival = await visitorsService.createArrival(req.body, req.user.userId);
+      res.status(201).json(arrival);
+    } catch (error) {
+      console.error('Error in createArrival controller:', error);
+      res.status(500).json({ error: 'An error occurred while checking in the visitor.' });
+    }
+  }
+
+  async createDeparture(req, res) {
+    try {
+      const departure = await visitorsService.createDeparture(req.params.arrivalId, req.user.userId);
+      if (!departure) {
+        return res.status(404).json({ error: 'Visitor arrival record not found.' });
+      }
+      res.status(200).json(departure);
+    } catch (error) {
+      console.error('Error in createDeparture controller:', error);
+      res.status(500).json({ error: 'An error occurred while checking out the visitor.' });
+    }
+  }
+
+  async getArrivals(req, res) {
+    try {
+      const arrivals = await visitorsService.getArrivals(req.query.date, req.query.page, req.query.limit);
+      res.status(200).json(arrivals);
+    } catch (error) {
+      console.error('Error in getArrivals controller:', error);
+      res.status(500).json({ error: 'Failed to fetch arrivals.' });
+    }
+  }
+
+  async getDepartures(req, res) {
+    try {
+      const departures = await visitorsService.getDepartures(req.query.date, req.query.page, req.query.limit);
+      res.status(200).json(departures);
+    } catch (error) {
+      console.error('Error in getDepartures controller:', error);
+      res.status(500).json({ error: 'Failed to fetch departures.' });
+    }
+  }
+
+  async getPaginatedArrivals(req, res) {
+    try {
+      const paginatedArrivals = await visitorsService.getPaginatedArrivals(
+        req.query.date,
+        req.query.page,
+        req.query.limit
+      );
+      res.status(200).json(paginatedArrivals);
+    } catch (error) {
+      console.error('Error in getPaginatedArrivals controller:', error);
+      res.status(500).json({ error: 'Failed to fetch paginated arrivals.' });
+    }
+  }
+
+  async getPaginatedDepartures(req, res) {
+    try {
+      const paginatedDepartures = await visitorsService.getPaginatedDepartures(
+        req.query.date,
+        req.query.page,
+        req.query.limit
+      );
+      res.status(200).json(paginatedDepartures);
+    } catch (error) {
+      console.error('Error in getPaginatedDepartures controller:', error);
+      res.status(500).json({ error: 'Failed to fetch paginated departures.' });
+    }
+  }
+
+  async getVisitorActivityForResident(req, res) {
+    try {
+      const activity = await visitorsService.getVisitorActivityForResident(req.params.residentId);
+      res.status(200).json(activity);
+    } catch (error) {
+      console.error('Error in getVisitorActivityForResident controller:', error);
+      res.status(500).json({ error: 'Failed to fetch visitor activity.' });
     }
   }
 }

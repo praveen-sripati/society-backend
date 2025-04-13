@@ -10,8 +10,11 @@ const visitorRoutes = require('./routes/visitors');
 const chatRoutes = require('./routes/chat');
 const maintenanceRequestsRoutes = require('./routes/maintenanceRequests');
 
+
 const app = express();
 const port = process.env.PORT || 3000;
+const deleteExpiredPreApprovals = require('./cron/deletePreApprovals'); // Import the cron job
+const updatePreApprvalStatus = require('./cron/updatePreApprvalStatus');
 
 // CORS configuration
 app.use(cors({
